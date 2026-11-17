@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>صيدليات العزبي | منظومة التطوير والإنشاءات والصيانة</title>
+    
+    <!-- PWA & Mobile App Meta Tags -->
+    <meta name="application-name" content="مشروعات العزبي">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="مشروعات العزبي">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#092c4c">
+    <link id="dynamicFavicon" rel="icon" type="image/png" href="">
+    <link id="dynamicAppleIcon" rel="apple-touch-icon" href="">
+    <link id="dynamicManifest" rel="manifest" href="">
+
+    <!-- Tailwind CSS & Cairo Arabic Font -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Supabase JS Client SDK v2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f0f4f9;
+            color: #0f2942;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .elezaby-header {
+            background: linear-gradient(135deg, #092c4c 0%, #0d4477 55%, #0284c7 100%);
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.45; transform: scale(1.25); }
+        }
+        .live-dot {
+            animation: pulse-dot 1.8s infinite ease-in-out;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Corporate Header: El-Ezaby Pharmacy (Blue & White) -->
+    <header class="elezaby-header text-white shadow-lg sticky top-0 z-30 no-print border-b-2 border-sky-400/40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            
+            <!-- Brand & App Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-md p-1.5 border border-sky-100 shrink-0">
+                    <svg viewBox="0 0 64 64" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="ezGrad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#092c4c"/>
+                                <stop offset="100%" stop-color="#0284c7"/>
+                            </linearGradient>
+                        </defs>
+                        <rect width="64" height="64" rx="14" fill="url(#ezGrad)"/>
+                        <path d="M27 14h10v13h13v10H37v13H27V37H14V27h13V14z" fill="#ffffff"/>
+                        <circle cx="49" cy="49" r="9" fill="#38bdf8" stroke="#092c4c" stroke-width="2.5"/>
+                        <path d="M45 49l2.5 2.5L53 46" stroke="#092c4c" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-lg md:text-2xl font-black tracking-tight text-white">صيدليات العزبي</span>
+                        <span class="bg-white/20 text-sky-100 text-[10px] md:text-[11px] font-bold px-2 py-0.5 rounded-full border border-white/20">El-Ezaby Pharmacy</span>
+                        <!-- Realtime Cloud Connection Status Pill -->
+                        <button type="button" onclick="openCloudSettingsModal()" id="cloudStatusBadge"
+                            class="flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-300/40 text-amber-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
+                            title="اضغط لإعداد أو مراجعة اتصال Supabase السحابي">
+                            <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-amber-300"></span>
+                            <span id="cloudStatusText">وضع محلي (اضغط للربط السحابي)</span>
+                        </button>
+                    </div>
+                    <p class="text-[11px] md:text-xs text-sky-100 font-semibold mt-0.5">إدارة التطوير والمشروعات والإنشاءات الهندسية والصيانة</p>
+                </div>
+            </div>
+
+            <!-- User Context & Global Actions -->
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="flex items-center bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-2.5 py-1.5 text-xs gap-1.5">
+                    <span class="text-sky-200 font-bold hidden sm:inline">المستخدم:</span>
+                    <input id="currentUserName" type="text" value="م. محمد خالد" onchange="saveUserIdentity()"
+                        class="bg-white/95 text-slate-900 px-2 py-1 rounded-lg border-0 font-bold w-28 focus:ring-2 focus:ring-sky-300 text-xs" placeholder="الاسم..." />
+                    <select id="currentUserRole" onchange="saveUserIdentity()"
+                        class="bg-white/95 text-blue-950 px-2 py-1 rounded-lg border-0 font-bold text-xs focus:ring-2 focus:ring-sky-300">
+                        <option value="إدارة المشروعات">إدارة المشروعات</option>
+                        <option value="مهندس إشراف موقع">مهندس إشراف موقع</option>
+                        <option value="مقاول أعمال وتشطيبات">مقاول أعمال وتشطيبات</option>
+                        <option value="مقاول كهروميكانيك">مقاول كهروميكانيك</option>
+                        <option value="استشاري هندسي">استشاري هندسي</option>
+                    </select>
+                </div>
+
+                <!-- Primary Create Project Button -->
+                <button type="button" onclick="openNewProjectModal()" class="bg-white hover:bg-sky-50 text-blue-950 font-black px-3.5 py-2 rounded-xl text-xs md:text-sm shadow-md flex items-center gap-1.5 transition transform hover:scale-[1.02]">
+                    <span class="text-blue-700 font-extrabold">➕</span>
+                    <span>مشروع جديد</span>
+                </button>
+
+                <!-- Cloud Config Button -->
+                <button type="button" onclick="openCloudSettingsModal()" class="bg-sky-500/30 hover:bg-sky-500/40 text-white border border-sky-300/40 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1" title="إعدادات السحابة ومشاركة الرابط">
+                    <span>☁️</span>
+                    <span class="hidden md:inline">السحابة والمشاركة</span>
+                </button>
+
+                <!-- Install Mobile App Button -->
+                <button type="button" id="btnInstallApp" onclick="triggerInstallPWA()" class="bg-emerald-500/90 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-black transition flex items-center gap-1 shadow-xs" title="تثبيت كتطبيق على الموبايل">
+                    <span>📲</span>
+                    <span class="hidden sm:inline">تثبيت التطبيق</span>
+                </button>
+
+                <!-- Export / Import Backup -->
+                <button type="button" onclick="exportBackupJSON()" class="bg-blue-900/70 hover:bg-blue-900 text-white border border-white/20 px-2.5 py-2 rounded-xl text-xs font-bold transition" title="تحميل نسخة احتياطية JSON">
+                    💾
+                </button>
+
+                <label class="bg-blue-900/70 hover:bg-blue-900 text-white border border-white/20 px-2.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer" title="استيراد نسخة بيانات JSON">
+                    📂
+                    <input type="file" accept=".json" class="hidden" onchange="importBackupJSON(event)" />
+                </label>
+
+                <button type="button" onclick="clearAllProjects()" class="bg-red-500/80 hover:bg-red-600 text-white border border-red-400/50 px-2.5 py-2 rounded-xl text-xs font-bold transition" title="تصفير اللوحة">
+                    🗑️
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Container -->
+    <main class="max-w-7xl mx-auto w-full px-4 py-5 flex-1 space-y-5">
+
+        <!-- Executive KPI Summary Cards -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/90 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500">إجمالي المشاريع الهندسية</span>
+                    <span class="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center text-lg">🏢</span>
+                </div>
+                <div class="mt-2.5 flex items-baseline justify-between">
+                    <span id="kpiTotalProjects" class="text-2xl md:text-3xl font-black text-slate-900">0</span>
+                    <span id="kpiActiveCount" class="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">0 جاري التنفيذ</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/90 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500">متوسط الإنجاز الميداني</span>
+                    <span class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg">✅</span>
+                </div>
+                <div class="mt-2.5">
+                    <div class="flex items-baseline justify-between">
+                        <span id="kpiAvgProgress" class="text-2xl md:text-3xl font-black text-emerald-600">0%</span>
+                        <span id="kpiCompletedCount" class="text-[11px] text-slate-600 font-bold bg-slate-100 px-2 py-0.5 rounded-full">0 مكتمل</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full mt-2 overflow-hidden">
+                        <div id="kpiProgressBar" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/90 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500">قيمة العقود وأوامر التغيير</span>
+                    <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-lg">💰</span>
+                </div>
+                <div class="mt-2.5">
+                    <div id="kpiTotalBudget" class="text-lg md:text-xl font-black text-slate-900">0 ج.م</div>
+                    <div id="kpiEstimatedBudget" class="text-[11px] font-semibold text-slate-500 mt-0.5">الميزانية التقديرية: 0 ج.م</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/90 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500">المنصرف بالمستخلصات</span>
+                    <span class="w-9 h-9 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center text-lg">🧾</span>
+                </div>
+                <div class="mt-2.5">
+                    <div id="kpiTotalPaid" class="text-lg md:text-xl font-black text-blue-700">0 ج.م</div>
+                    <div id="kpiTotalRemaining" class="text-[11px] font-semibold text-slate-500 mt-0.5">المتبقي للصرف: 0 ج.م</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/90 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500">الرسومات الهندسية والـ DWG</span>
+                    <span class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-lg">📐</span>
+                </div>
+                <div class="mt-2.5 flex items-baseline justify-between">
+                    <span id="kpiTotalDrawings" class="text-2xl md:text-3xl font-black text-indigo-700">0</span>
+                    <span id="kpiApprovedDrawings" class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">0 معتمد</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search, Filters & Export Bar -->
+        <section class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200/90 flex flex-wrap items-center justify-between gap-3 no-print">
+            <div class="flex flex-wrap items-center gap-2.5 flex-1">
+                <div class="relative flex-1 min-w-[220px]">
+                    <input id="searchInput" type="text" oninput="renderAll()" placeholder="🔍 بحث باسم الفرع، كود الفرع، المقاول، المهندس، البند..."
+                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs md:text-sm font-semibold focus:outline-none focus:border-blue-600 focus:bg-white transition" />
+                </div>
+                
+                <select id="filterType" onchange="renderAll()" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-blue-600">
+                    <option value="ALL">🏢 كل أنواع المشاريع</option>
+                    <option value="إنشاء وتجهيز فرع جديد (Fit-out متكامل)">إنشاء وتجهيز فرع جديد (Fit-out متكامل)</option>
+                    <option value="تطوير وتجديد فرع قائم (Renovation)">تطوير وتجديد فرع قائم (Renovation)</option>
+                    <option value="صيانة دورية وطارئة (Maintenance)">صيانة دورية وطارئة (Maintenance)</option>
+                    <option value="أعمال كهروميكانيك وتكييف (MEP)">أعمال كهروميكانيك وتكييف (MEP)</option>
+                </select>
+
+                <select id="filterSubTrade" onchange="renderAll()" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-blue-600">
+                    <option value="ALL">🔨 كل البنود الفرعية</option>
+                    <option value="سيراميك وبورسلين">سيراميك وبورسلين</option>
+                    <option value="دهانات وديكور">دهانات وديكور</option>
+                    <option value="سباكة وصحي">سباكة وصحي</option>
+                    <option value="نجارة وأبواب وتجاليد">نجارة وأبواب وتجاليد</option>
+                    <option value="جبس بورد وأسقف معلقة">جبس بورد وأسقف معلقة</option>
+                    <option value="تجليد وديكورات صيدلية">تجليد وديكورات صيدلية</option>
+                    <option value="واجهات وكلادينج ولافتات">واجهات وكلادينج ولافتات</option>
+                    <option value="كهرباء وإنارة وتيار خفيف">كهرباء وإنارة وتيار خفيف</option>
+                    <option value="تكييف وتهوية (HVAC)">تكييف وتهوية (HVAC)</option>
+                    <option value="إطفاء وإنذار حريق">إطفاء وإنذار حريق</option>
+                    <option value="زجاج وسيكوريت">زجاج وسيكوريت</option>
+                </select>
+
+                <select id="filterStatus" onchange="renderAll()" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-blue-600">
+                    <option value="ALL">📌 كل الحالات</option>
+                    <option value="معاينة وتصميم">معاينة وتصميم</option>
+                    <option value="طرح وترسية">طرح وترسية</option>
+                    <option value="قيد التنفيذ بالموقع">قيد التنفيذ بالموقع</option>
+                    <option value="استلام ابتدائي">استلام ابتدائي</option>
+                    <option value="مكتمل ومسلم">مكتمل ومسلم</option>
+                    <option value="متوقف / مؤجل">متوقف / مؤجل</option>
+                </select>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-xs">
+                    <span>📊</span>
+                    <span>Excel (CSV)</span>
+                </button>
+                <button type="button" onclick="window.print()" class="bg-blue-900 hover:bg-blue-800 text-white px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-xs">
+                    <span>🖨️</span>
+                    <span>طباعة</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Master-Detail Workspace -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+            <!-- Right Sidebar: Branch Projects List (4 Cols) -->
+            <div class="lg:col-span-4 space-y-3">
+                <div class="flex items-center justify-between px-1">
+                    <h2 class="text-sm font-black text-blue-950 flex items-center gap-1.5">
+                        <span>📑</span>
+                        <span>فروع ومشاريع صيدليات العزبي</span>
+                    </h2>
+                    <span id="lastSavedBadge" class="text-[11px] text-slate-500 font-semibold bg-white px-2.5 py-0.5 rounded-full border border-slate-200">جاهز</span>
+                </div>
+                <div id="projectsListContainer" class="space-y-3 max-h-[780px] overflow-y-auto custom-scroll pr-1">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- Left Main Panel: Active Project Workspace (8 Cols) -->
+            <div id="projectDetailWorkspace" class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden min-h-[600px]">
+                <!-- Populated via JS -->
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL 1: Create / Edit Project -->
+    <div id="projectModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-4xl w-full max-h-[92vh] overflow-y-auto custom-scroll">
+            
+            <div class="elezaby-header text-white px-6 py-4 flex items-center justify-between rounded-t-2xl sticky top-0 z-10">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-lg bg-white text-blue-900 flex items-center justify-center font-black text-sm">🏗️</span>
+                    <div>
+                        <h3 id="projectModalTitle" class="font-black text-base md:text-lg">إنشاء مشروع هندسي جديد - صيدليات العزبي</h3>
+                        <p class="text-[11px] text-sky-100 font-semibold">تسجيل بيانات الفرع، المقاول، الميزانية، وتحديد البنود الإنشائية والتطويرية</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeProjectModal()" class="text-white/80 hover:text-white text-2xl font-black px-2">&times;</button>
+            </div>
+
+            <form id="projectForm" onsubmit="saveProjectForm(event)" class="p-5 md:p-6 space-y-4 text-xs md:text-sm">
+                <input type="hidden" id="editProjectId" />
+
+                <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-200/80 space-y-3">
+                    <h4 class="font-extrabold text-blue-950 text-xs">🏷️ بيانات الفرع والمشروع</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                        <div class="md:col-span-8">
+                            <label class="block font-bold text-slate-700 mb-1">اسم المشروع / الفرع *</label>
+                            <input id="projName" type="text" required placeholder="مثال: إنشاء وتجهيز فرع العزبي - التجمع الخامس"
+                                class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 font-bold text-slate-800 focus:outline-none focus:border-blue-600" />
+                        </div>
+                        <div class="md:col-span-4">
+                            <label class="block font-bold text-slate-700 mb-1">كود الفرع / المشروع *</label>
+                            <input id="projCode" type="text" required placeholder="مثال: BR-524"
+                                class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 font-black text-blue-900 focus:outline-none focus:border-blue-600" />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">نوع المشروع الرئيسي *</label>
+                            <select id="projType" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 font-bold text-slate-800">
+                                <option value="إنشاء وتجهيز فرع جديد (Fit-out متكامل)">إنشاء وتجهيز فرع جديد (Fit-out متكامل)</option>
+                                <option value="تطوير وتجديد فرع قائم (Renovation)">تطوير وتجديد فرع قائم (Renovation)</option>
+                                <option value="صيانة دورية وطارئة (Maintenance)">صيانة دورية وطارئة (Maintenance)</option>
+                                <option value="أعمال كهروميكانيك وتكييف (MEP)">أعمال كهروميكانيك وتكييف (MEP)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">حالة المشروع *</label>
+                            <select id="projStatus" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 font-bold text-slate-800">
+                                <option value="معاينة وتصميم">معاينة وتصميم</option>
+                                <option value="طرح وترسية">طرح وترسية</option>
+                                <option value="قيد التنفيذ بالموقع" selected>قيد التنفيذ بالموقع</option>
+                                <option value="استلام ابتدائي">استلام ابتدائي</option>
+                                <option value="مكتمل ومسلم">مكتمل ومسلم</option>
+                                <option value="متوقف / مؤجل">متوقف / مؤجل</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">المساحة (م2) والموقع الجغرافي</label>
+                            <input id="projLocation" type="text" placeholder="مثال: 195 م2 - القاهرة الجديدة"
+                                class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-Scopes Checkboxes -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block font-black text-blue-950 text-xs">🔨 البنود الفرعية المشمولة في نطاق أعمال المشروع:</label>
+                        <span class="text-[11px] text-slate-500 font-semibold">حدد التخصصات المسندة</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pt-1" id="subScopesContainer">
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50/50 cursor-pointer">
+                            <input type="checkbox" name="subScope" value="سيراميك وبورسلين" checked class="w-4 h-4 accent-blue-700" />
+                            <span class="font-bold text-xs text-slate-800">سيراميك وبورسلين</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50/50 cursor-pointer">
+                            <input type="checkbox" name="subScope" value="دهانات وديكور" checked class="w-4 h-4 accent-blue-700" />
+                            <span class="font-bold text-xs text-slate-800">دهانات وديكور</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50/50 cursor-pointer">
+                            <input type="checkbox" name="subScope" value="سباكة وصحي" checked class="w-4 h-4 accent-blue-700" />
+                            <span class="font-bold text-xs text-slate-800">سباكة وصحي</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50/50 cursor-pointer">
+                            <input type="checkbox" name="subScope" value="نجارة وأبواب وتجاليد" checked class="w-4 h-4 accent-blue-700" />
+                            <span class="font-bold text-xs text-slate-800">نجارة وأبواب</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50/50 cursor-pointer">
+                            <input type="checkbox" name="subScope" value="جبس بورد وأسقف معلقة" checked class="w-4 h-4 accent-blue-700" />
+                            <span class="font-bold text-xs text-slate-800">جبس بورد وأسقف</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50/50 cursor-pointer">
+                            <input type="checkbox" name="subScope" value="تجليد وديكورات صيدلية" checked class="w-4 h-4 accent-blue-700" />
+                            <span class="font-bold text-xs text-slate-800">تجليد وديكورات</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50/50 cursor-pointer">
+                            <input type="checkbox" name="subScope" value="واجهات وكلادينج ولافتات" checked class="w-4 h-4 accent-blue-700" />
+                            <span class="font-bold text-xs text-slate-800">واجهات وكلادينج</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50/50 cursor-pointer">
+                            <input type="checkbox" name="subScope" value="كهرباء وإنارة وتيار خفيف" checked class="w-4 h-4 accent-blue-700" />
+                            <span class="font-bold text-xs text-slate-800">كهرباء وتيار خفيف</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50/50 cursor-pointer">
+                            <input type="checkbox" name="subScope" value="تكييف وتهوية (HVAC)" checked class="w-4 h-4 accent-blue-700" />
+                            <span class="font-bold text-xs text-slate-800">تكييف وتهوية</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50/50 cursor-pointer">
+                            <input type="checkbox" name="subScope" value="إطفاء وإنذار حريق" checked class="w-4 h-4 accent-blue-700" />
+                            <span class="font-bold text-xs text-slate-800">إطفاء وإنذار حريق</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50/50 cursor-pointer">
+                            <input type="checkbox" name="subScope" value="زجاج وسيكوريت" checked class="w-4 h-4 accent-blue-700" />
+                            <span class="font-bold text-xs text-slate-800">زجاج وسيكوريت</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Stakeholders -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">شركة المقاولات / المنفذ *</label>
+                        <input id="projContractor" type="text" required placeholder="اسم شركة المقاولات"
+                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 font-bold text-slate-800" />
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">المهندس المشرف (صيدليات العزبي)</label>
+                        <input id="projEngineer" type="text" placeholder="اسم مهندس المشروعات"
+                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800" />
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">المكتب الاستشاري / المصمم</label>
+                        <input id="projConsultant" type="text" placeholder="الاستشاري الهندسي"
+                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800" />
+                    </div>
+                </div>
+
+                <!-- Budgets & Dates -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">الميزانية التقديرية (BOQ)</label>
+                        <input id="projEstimatedBudget" type="number" step="any" value="0"
+                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 font-bold text-slate-800" />
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">قيمة عقد المقاول الفعلي</label>
+                        <input id="projContractValue" type="number" step="any" value="0"
+                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 font-bold text-blue-900" />
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">تاريخ استلام الموقع</label>
+                        <input id="projStartDate" type="date"
+                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 font-semibold" />
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">تاريخ الافتتاح المستهدف</label>
+                        <input id="projEndDate" type="date"
+                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 font-semibold" />
+                    </div>
+                </div>
+
+                <div id="templateChecklistOption" class="bg-sky-50 border border-sky-200 rounded-xl p-3 flex items-center gap-3">
+                    <input id="loadDefaultChecklist" type="checkbox" checked class="w-4 h-4 accent-blue-700 cursor-pointer" />
+                    <label for="loadDefaultChecklist" class="text-xs font-bold text-blue-950 cursor-pointer">
+                        إدراج خطوات الاستلام والتنفيذ الهندسي لصيدليات العزبي تلقائياً (تكسير ومباني، سباكة، كهرباء، سيراميك، جبس بورد، تجليد ونجارة، واجهات وكلادينج، استلام ابتدائي)
+                    </label>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">ملاحظات العقد ومواصفات التشطيب</label>
+                    <textarea id="projNotes" rows="2" placeholder="وصف للأعمال الإضافية أو شروط خاصة بصيدليات العزبي..."
+                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
+                    <button type="button" onclick="closeProjectModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-50">إلغاء</button>
+                    <button type="submit" class="px-6 py-2 rounded-xl bg-blue-700 hover:bg-blue-600 text-white font-black shadow-md">حفظ المشروع</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Supabase Cloud Connection & Shareable Link -->
+    <div id="cloudSettingsModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-xl w-full overflow-hidden">
+            <div class="elezaby-header text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xl">☁️</span>
+                    <div>
+                        <h3 class="font-black text-base">إعدادات الربط السحابي اللحظي (Supabase Realtime)</h3>
+                        <p class="text-[11px] text-sky-100">مزامنة فورية للبيانات واللوحات الهندسية بين المكتب والموقع والمقاولين</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeCloudSettingsModal()" class="text-white/80 hover:text-white text-2xl font-black px-2">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-4 text-xs">
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-blue-950 space-y-1">
+                    <p class="font-extrabold">كيف تربط التطبيق بالسحابة؟</p>
+                    <p class="text-slate-700 leading-relaxed">أدخل رابط المشروع (<strong>Project URL</strong>) والمفتاح العام (<strong>anon public key</strong>) من لوحة تحكم Supabase، ثم اضغط <strong>"حفظ وتفعيل المزامنة"</strong>.</p>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">1. Supabase Project URL</label>
+                    <input id="inputSupabaseUrl" type="url" dir="ltr" placeholder="https://xxxxxxxxxxxx.supabase.co"
+                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-mono text-xs focus:outline-none focus:border-blue-600" />
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">2. Supabase Anon / Public Key</label>
+                    <input id="inputSupabaseKey" type="text" dir="ltr" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 font-mono text-xs focus:outline-none focus:border-blue-600" />
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+                    <button type="button" onclick="saveAndConnectSupabase()" class="flex-1 bg-blue-700 hover:bg-blue-600 text-white font-black py-2.5 px-4 rounded-xl shadow-sm transition">
+                        ⚡ حفظ وتفعيل المزامنة السحابية
+                    </button>
+                    <button type="button" onclick="disconnectSupabase()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-3.5 rounded-xl transition">
+                        فصل السحابة
+                    </button>
+                </div>
+
+                <!-- Share Configured Link with Contractors -->
+                <div id="shareReadyLinkBox" class="hidden border-t border-slate-200 pt-4 space-y-2">
+                    <label class="block font-extrabold text-emerald-800">🔗 رابط الدخول الجاهز للمقاولين والمهندسين (مربوط تلقائياً بالسحابة):</label>
+                    <p class="text-[11px] text-slate-500">انسخ هذا الرابط وأرسله للمقاول أو المهندس على الواتساب؛ بمجرد فتحه سيتصل بقاعدة البيانات السحابية فوراً دون إدخال أي مفاتيح.</p>
+                    <div class="flex items-center gap-2">
+                        <input id="generatedShareUrl" type="text" readonly dir="ltr"
+                            class="flex-1 bg-emerald-50/60 border border-emerald-300 rounded-xl px-3 py-2 font-mono text-[11px] text-emerald-950" />
+                        <button type="button" onclick="copyShareUrl()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2 rounded-xl text-xs shrink-0">
+                            📋 نسخ الرابط
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application JavaScript -->
+    <script>
+        // =========================================================================
+        // 1. SUPABASE CONFIGURATION (يمكنك لصق بيانات مشروعك هنا مباشرة قبل الرفع على GitHub)
+        // =========================================================================
+        const DEFAULT_SUPABASE_URL = ""; 
+        const DEFAULT_SUPABASE_ANON_KEY = "";
+        const STORAGE_BUCKET_NAME = "engineering-drawings";
+
+        // =========================================================================
+        // 2. PWA APP ICON & DYNAMIC MANIFEST GENERATOR (للتثبيت كتطبيق على الموبايل)
+        // =========================================================================
+        let deferredInstallPrompt = null;
+
+        function setupPWAAndAppIcons() {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 512;
+                const ctx = canvas.getContext('2d');
+
+                // Background rounded square gradient (El-Ezaby Blue)
+                const grad = ctx.createLinearGradient(0, 0, 512, 512);
+                grad.addColorStop(0, '#092c4c');
+                grad.addColorStop(1, '#0284c7');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.roundRect(0, 0, 512, 512, 110);
+                ctx.fill();
+
+                // Subtle blueprint grid lines
+                ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                ctx.lineWidth = 2;
+                for (let i = 64; i < 512; i += 64) {
+                    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
+                }
+
+                // White Medical + Engineering Cross Emblem
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.roundRect(216, 106, 80, 300, 18);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.roundRect(106, 216, 300, 80, 18);
+                ctx.fill();
+
+                // Cyan Checkmark Badge at bottom-right
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath();
+                ctx.arc(385, 385, 68, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.lineWidth = 10;
+                ctx.strokeStyle = '#092c4c';
+                ctx.stroke();
+
+                ctx.strokeStyle = '#092c4c';
+                ctx.lineWidth = 14;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                ctx.moveTo(355, 386);
+                ctx.lineTo(376, 408);
+                ctx.lineTo(418, 364);
+                ctx.stroke();
+
+                const iconDataUrl = canvas.toDataURL('image/png');
+                document.getElementById('dynamicFavicon').href = iconDataUrl;
+                document.getElementById('dynamicAppleIcon').href = iconDataUrl;
+
+                const manifestObj = {
+                    name: "صيدليات العزبي - إدارة التطوير والمشروعات",
+                    short_name: "مشروعات العزبي",
+                    description: "المنظومة السحابية لمتابعة إنشاءات وتطوير وصيانة فروع صيدليات العزبي",
+                    start_url: window.location.href,
+                    display: "standalone",
+                    background_color: "#f0f4f9",
+                    theme_color: "#092c4c",
+                    dir: "rtl",
+                    lang: "ar",
+                    icons: [
+                        { src: iconDataUrl, sizes: "192x192", type: "image/png" },
+                        { src: iconDataUrl, sizes: "512x512", type: "image/png" }
+                    ]
+                };
+                const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+                document.getElementById('dynamicManifest').href = URL.createObjectURL(manifestBlob);
+            } catch (e) {
+                console.warn("PWA icon init warning:", e);
+            }
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+        });
+
+        async function triggerInstallPWA() {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+            } else {
+                alert("لتثبيت المنظومة كتطبيق على هاتفك:\n\n• أندرويد (Chrome): اضغط على النقاط الثلاث (⋮) في الأعلى ثم اختر (Add to Home screen / تثبيت التطبيق).\n• آيفون (Safari): اضغط على زر المشاركة (مربع بسهم لأعلى) في الأسفل ثم اختر (Add to Home Screen).");
+            }
+        }
+
+        // =========================================================================
+        // 3. STANDARD CHECKLIST & INITIAL DATA
+        // =========================================================================
+        const DEFAULT_CHECKLIST_TEMPLATE = [
+            { id: 'c1', phase: '1. المعاينة والرسومات', title: 'رفع المساحة الميداني وتدقيق المخطط المعماري وتوزيع الأرفف (Layout)', done: true, assignee: 'المكتب الاستشاري', notes: '' },
+            { id: 'c2', phase: '1. المعاينة والرسومات', title: 'اعتماد المخططات التنفيذية للكهروميكانيك ومقايسة الكميات المعتمدة', done: true, assignee: 'إدارة المشروعات', notes: '' },
+            { id: 'c3', phase: '2. الأعمال الاعتيادية', title: 'محضر تسليم الموقع للمقاول وإتمام أعمال التكسير والإزالات والمباني', done: true, assignee: 'مهندس الإشراف', notes: '' },
+            { id: 'c4', phase: '3. تأسيس السباكة والصحي', title: 'تأسيس مواسير التغذية والصرف للحمام والأوفيس واختبار الضغط بالبار', done: false, assignee: 'مقاول السباكة', notes: '' },
+            { id: 'c5', phase: '3. تأسيس الكهرباء والداتا', title: 'تمديد خراطيم وكابلات الكهرباء للوحات، الـ UPS، الكاميرات، ونقاط كاشير البيع', done: false, assignee: 'مقاول الكهرباء', notes: '' },
+            { id: 'c6', phase: '3. تأسيس التكييف (HVAC)', title: 'تمديد مواسير النحاس ومسارات الهواء وصرف التكييفات واعتماد أماكن الوحدات الخارجية', done: false, assignee: 'مقاول التكييف', notes: '' },
+            { id: 'c7', phase: '4. السيراميك والبورسلين', title: 'توريد وتركيب أرضيات البورسلين لصالة الفرع وسيراميك الحمام والمخزن الخلفي', done: false, assignee: 'مقاول السيراميك', notes: '' },
+            { id: 'c8', phase: '4. الجبس بورد والأسقف', title: 'تركيب شاسيهات وألواح الجبس بورد المقاوم للرطوبة وتجهيز فتحات الإضاءة والتكييف', done: false, assignee: 'مقاول الجبس بورد', notes: '' },
+            { id: 'c9', phase: '4. النجارة والتجليد والديكور', title: 'تركيب الأبواب وتجاليد الحوائط الخشبية وتجهيز كاونترات الصيدلية والرفوف الجدارية', done: false, assignee: 'مقاول النجارة والديكور', notes: '' },
+            { id: 'c10', phase: '4. الدهانات والتشطيب', title: 'تنفيذ دهانات الحوائط والأسقف المعتمدة بألوان هوية صيدليات العزبي الرسمية', done: false, assignee: 'المقاول العام', notes: '' },
+            { id: 'c11', phase: '5. الواجهات واللافتات', title: 'تركيب الكلادينج الخارجي واللافتة الرئيسية المضيئة (Signage) وأبواب السيكوريت', done: false, assignee: 'مورد الواجهات', notes: '' },
+            { id: 'c12', phase: '5. الاستلام والتشغيل', title: 'اختبارات التشغيل الشاملة (إنارة، تكييف، داتا، إطفاء) وتوقيع الاستلام الابتدائي', done: false, assignee: 'إدارة المشروعات', notes: '' }
+        ];
+
+        const INITIAL_PROJECTS = [
+            {
+                id: 'PRJ-101',
+                name: 'إنشاء وتجهيز فرع العزبي - التجمع الخامس (محور محمد نجيب)',
+                code: 'BR-521',
+                type: 'إنشاء وتجهيز فرع جديد (Fit-out متكامل)',
+                subScopes: ['سيراميك وبورسلين', 'دهانات وديكور', 'سباكة وصحي', 'نجارة وأبواب وتجاليد', 'جبس بورد وأسقف معلقة', 'تجليد وديكورات صيدلية', 'واجهات وكلادينج ولافتات', 'كهرباء وإنارة وتيار خفيف', 'تكييف وتهوية (HVAC)'],
+                status: 'قيد التنفيذ بالموقع',
+                location: '210 م2 - القاهرة الجديدة',
+                contractor: 'شركة البناء الهندسي للتجهيزات المتكاملة',
+                engineer: 'م. محمد خالد',
+                consultant: 'مكتب دار التصميم الهندسي',
+                estimatedBudget: 1950000,
+                contractValue: 1880000,
+                variationOrders: 75000,
+                retentionPercent: 10,
+                startDate: '2026-09-15',
+                endDate: '2026-12-05',
+                notes: 'يشمل إنشاء صالة البيع الرئيسية، معمل التركيبات، المخزن، كاونترات الكاشير، وغرفة السيرفر وفق كود صيدليات العزبي.',
+                updatedBy: 'م. محمد خالد (إدارة المشروعات)',
+                updatedAt: '2026-11-17 14:30',
+                activeTab: 'checklist',
+                checklist: JSON.parse(JSON.stringify(DEFAULT_CHECKLIST_TEMPLATE)),
+                drawings: [
+                    {
+                        id: 'DRW-1',
+                        title: 'المخطط المعماري وتوزيع وحدات العرض والأرفف والكاونترات (Layout)',
+                        code: 'ARC-LAYOUT-01',
+                        discipline: 'معماري وديكور',
+                        format: 'DWG',
+                        revision: 'Rev 02',
+                        status: 'معتمد للتنفيذ (Approved)',
+                        uploadedBy: 'مكتب دار التصميم الهندسي',
+                        date: '2026-09-18',
+                        size: '4.8 MB',
+                        fileUrl: ''
+                    },
+                    {
+                        id: 'DRW-2',
+                        title: 'مخطط الأعمال الكهروميكانيكية وتغذية الكاشيرات والـ UPS',
+                        code: 'MEP-E01',
+                        discipline: 'كهرباء وتيار خفيف',
+                        format: 'PDF',
+                        revision: 'Rev 01',
+                        status: 'معتمد للتنفيذ (Approved)',
+                        uploadedBy: 'م. محمد خالد',
+                        date: '2026-09-22',
+                        size: '3.2 MB',
+                        fileUrl: ''
+                    }
+                ],
+                payments: [
+                    { id: 'PAY-1', title: 'دفعة مقدمة (تجهيز موقع وتشوينات - 25%)', invoiceNo: 'ADV-001', date: '2026-09-20', amount: 470000, status: 'تم الصرف' },
+                    { id: 'PAY-2', title: 'مستخلص جاري (1) - التكسير والمباني وتأسيس السباكة والكهرباء', invoiceNo: 'IPC-001', date: '2026-10-18', amount: 530000, status: 'تم الصرف' }
+                ]
+            }
+        ];
+
+        // =========================================================================
+        // 4. STATE & SUPABASE REALTIME ENGINE
+        // =========================================================================
+        let state = {
+            companyName: 'صيدليات العزبي - إدارة التطوير والمشروعات',
+            projects: [],
+            selectedProjectId: null
+        };
+
+        let supabaseClient = null;
+        let realtimeChannel = null;
+        let isCloudLive = false;
+        let isApplyingRemoteUpdate = false;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            setupPWAAndAppIcons();
+            loadUserIdentity();
+            checkUrlForCloudCredentials();
+            await initializeDataSource();
+            renderAll();
+        });
+
+        function loadUserIdentity() {
+            const savedName = localStorage.getItem('elezaby_user_name');
+            const savedRole = localStorage.getItem('elezaby_user_role');
+            if (savedName) document.getElementById('currentUserName').value = savedName;
+            if (savedRole) document.getElementById('currentUserRole').value = savedRole;
+        }
+
+        function saveUserIdentity() {
+            localStorage.setItem('elezaby_user_name', document.getElementById('currentUserName').value);
+            localStorage.setItem('elezaby_user_role', document.getElementById('currentUserRole').value);
+        }
+
+        function getCurrentActor() {
+            const name = document.getElementById('currentUserName').value.trim() || 'مستخدم';
+            const role = document.getElementById('currentUserRole').value;
+            return `${name} (${role})`;
+        }
+
+        // Support opening shared link with ?sb_url=...&sb_key=...
+        function checkUrlForCloudCredentials() {
+            const params = new URLSearchParams(window.location.search);
+            const urlParam = params.get('sb_url');
+            const keyParam = params.get('sb_key');
+            if (urlParam && keyParam) {
+                localStorage.setItem('elezaby_sb_url', urlParam.trim());
+                localStorage.setItem('elezaby_sb_key', keyParam.trim());
+                // Clean URL bar without reloading
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        function getSupabaseCredentials() {
+            const url = localStorage.getItem('elezaby_sb_url') || DEFAULT_SUPABASE_URL;
+            const key = localStorage.getItem('elezaby_sb_key') || DEFAULT_SUPABASE_ANON_KEY;
+            return { url: url.trim(), key: key.trim() };
+        }
+
+        function updateCloudStatusUI(connected, labelText) {
+            isCloudLive = connected;
+            const badge = document.getElementById('cloudStatusBadge');
+            const dot = document.getElementById('cloudStatusDot');
+            const text = document.getElementById('cloudStatusText');
+
+            if (connected) {
+                badge.className = "flex items-center gap-1.5 bg-emerald-500/25 hover:bg-emerald-500/35 border border-emerald-300/60 text-emerald-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer";
+                dot.className = "w-2 h-2 rounded-full bg-emerald-400 live-dot";
+                text.textContent = labelText || "متصل بالسحابة لحظياً (Live)";
+            } else {
+                badge.className = "flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-300/40 text-amber-100 text-[11px] font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer";
+                dot.className = "w-2 h-2 rounded-full bg-amber-300";
+                text.textContent = labelText || "وضع محلي (اضغط للربط السحابي)";
+            }
+        }
+
+        async function initializeDataSource() {
+            const { url, key } = getSupabaseCredentials();
+            if (url && key && window.supabase) {
+                const ok = await connectToSupabase(url, key);
+                if (ok) return;
+            }
+            loadFromLocalStorage();
+        }
+
+        function loadFromLocalStorage() {
+            const raw = localStorage.getItem('elezaby_projects_portal_state_v2');
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    state.projects = Array.isArray(parsed.projects) ? parsed.projects : JSON.parse(JSON.stringify(INITIAL_PROJECTS));
+                } catch (e) {
+                    state.projects = JSON.parse(JSON.stringify(INITIAL_PROJECTS));
+                }
+            } else {
+                state.projects = JSON.parse(JSON.stringify(INITIAL_PROJECTS));
+            }
+            state.selectedProjectId = state.projects[0]?.id || null;
+            updateCloudStatusUI(false, "وضع محلي (اضغط للربط السحابي)");
+        }
+
+        async function connectToSupabase(url, key) {
+            try {
+                updateCloudStatusUI(false, "جاري الاتصال بالسحابة...");
+                supabaseClient = window.supabase.createClient(url, key);
+
+                // Fetch initial row id=1 from portal_state
+                const { data, error } = await supabaseClient
+                    .from('portal_state')
+                    .select('*')
+                    .eq('id', 1)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error("Supabase fetch error:", error);
+                    alert("تعذر الاتصال بـ Supabase. تأكد من صحة الرابط والمفتاح وتشغيل كود SQL:\n" + error.message);
+                    updateCloudStatusUI(false, "خطأ في الاتصال السحابي");
+                    return false;
+                }
+
+                if (data && Array.isArray(data.projects_json) && data.projects_json.length > 0) {
+                    state.companyName = data.company_name || state.companyName;
+                    state.projects = data.projects_json;
+                    state.selectedProjectId = state.projects[0]?.id || null;
+                    updateLastSavedBadge(`متزامن • آخر تحديث بواسطة: ${data.updated_by || 'النظام'}`);
+                } else {
+                    // If cloud table is empty, load local or initial sample and push to cloud
+                    loadFromLocalStorage();
+                    await pushStateToSupabase("تهيئة البيانات الأولية");
+                }
+
+                // Subscribe to Realtime changes on public.portal_state
+                if (realtimeChannel) {
+                    await supabaseClient.removeChannel(realtimeChannel);
+                }
+
+                realtimeChannel = supabaseClient
+                    .channel('elezaby-portal-realtime')
+                    .on(
+                        'postgres_changes',
+                        { event: '*', schema: 'public', table: 'portal_state', filter: 'id=eq.1' },
+                        (payload) => {
+                            if (payload.new && Array.isArray(payload.new.projects_json)) {
+                                isApplyingRemoteUpdate = true;
+                                const prevSelected = state.selectedProjectId;
+                                state.projects = payload.new.projects_json;
+                                state.selectedProjectId = state.projects.some(p => p.id === prevSelected)
+                                    ? prevSelected
+                                    : (state.projects[0]?.id || null);
+
+                                localStorage.setItem('elezaby_projects_portal_state_v2', JSON.stringify(state));
+                                updateLastSavedBadge(`تحديث لحظي من: ${payload.new.updated_by || 'مستخدم'}`);
+                                renderAll();
+                                isApplyingRemoteUpdate = false;
+                            }
+                        }
+                    )
+                    .subscribe((status) => {
+                        if (status === 'SUBSCRIBED') {
+                            updateCloudStatusUI(true, "متصل بالسحابة لحظياً (Live)");
+                        }
+                    });
+
+                return true;
+            } catch (err) {
+                console.error("Supabase init exception:", err);
+                updateCloudStatusUI(false, "تعذر الاتصال السحابي");
+                return false;
+            }
+        }
+
+        async function persistState(actionSummary = "تحديث بيانات المشاريع") {
+            const actor = getCurrentActor();
+            const nowStr = new Date().toLocaleString('sv-SE').slice(0, 16);
+
+            localStorage.setItem('elezaby_projects_portal_state_v2', JSON.stringify({
+                companyName: state.companyName,
+                projects: state.projects,
+                updatedBy: actor,
+                updatedAt: nowStr
+            }));
+
+            if (isCloudLive && supabaseClient && !isApplyingRemoteUpdate) {
+                await pushStateToSupabase(actionSummary);
+            } else {
+                updateLastSavedBadge(`حفظ محلي (${nowStr})`);
+            }
+        }
+
+        async function pushStateToSupabase(actionSummary) {
+            if (!supabaseClient) return;
+            const actor = getCurrentActor();
+            const nowIso = new Date().toISOString();
+            const nowStr = new Date().toLocaleString('sv-SE').slice(0, 16);
+
+            updateLastSavedBadge("جاري المزامنة السحابية...");
+
+            const { error } = await supabaseClient
+                .from('portal_state')
+                .upsert({
+                    id: 1,
+                    company_name: state.companyName,
+                    projects_json: state.projects,
+                    updated_by: actor,
+                    updated_at: nowIso
+                });
+
+            if (!error) {
+                updateLastSavedBadge(`تمت المزامنة السحابية (${nowStr})`);
+                // Record audit log asynchronously
+                supabaseClient.from('audit_logs').insert({
+                    user_name: actor,
+                    action_details: actionSummary
+                }).then(() => {});
+            } else {
+                console.error("Supabase save error:", error);
+                updateLastSavedBadge("⚠️ تعذر الحفظ السحابي");
+            }
+        }
+
+        function updateLastSavedBadge(text) {
+            const el = document.getElementById('lastSavedBadge');
+            if (el) el.textContent = text;
+        }
+
+        // =========================================================================
+        // 5. CLOUD SETTINGS MODAL HANDLERS
+        // =========================================================================
+        function openCloudSettingsModal() {
+            const { url, key } = getSupabaseCredentials();
+            document.getElementById('inputSupabaseUrl').value = url;
+            document.getElementById('inputSupabaseKey').value = key;
+            refreshShareLinkBox(url, key);
+
+            const modal = document.getElementById('cloudSettingsModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeCloudSettingsModal() {
+            const modal = document.getElementById('cloudSettingsModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function refreshShareLinkBox(url, key) {
+            const box = document.getElementById('shareReadyLinkBox');
+            const input = document.getElementById('generatedShareUrl');
+            if (url && key && window.location.protocol.startsWith('http')) {
+                const baseUrl = window.location.origin + window.location.pathname;
+                const fullShare = `${baseUrl}?sb_url=${encodeURIComponent(url)}&sb_key=${encodeURIComponent(key)}`;
+                input.value = fullShare;
+                box.classList.remove('hidden');
+            } else {
+                box.classList.add('hidden');
+            }
+        }
+
+        async function saveAndConnectSupabase() {
+            const url = document.getElementById('inputSupabaseUrl').value.trim();
+            const key = document.getElementById('inputSupabaseKey').value.trim();
+            if (!url || !key) {
+                alert("يرجى إدخال كل من Project URL و Anon Public Key.");
+                return;
+            }
+            localStorage.setItem('elezaby_sb_url', url);
+            localStorage.setItem('elezaby_sb_key', key);
+            const ok = await connectToSupabase(url, key);
+            if (ok) {
+                refreshShareLinkBox(url, key);
+                renderAll();
+                alert("✅ تم الاتصال بقاعدة بيانات Supabase السحابية وتفعيل المزامنة اللحظية بنجاح!");
+            }
+        }
+
+        function disconnectSupabase() {
+            localStorage.removeItem('elezaby_sb_url');
+            localStorage.removeItem('elezaby_sb_key');
+            if (realtimeChannel && supabaseClient) {
+                supabaseClient.removeChannel(realtimeChannel);
+            }
+            supabaseClient = null;
+            isCloudLive = false;
+            updateCloudStatusUI(false, "وضع محلي (اضغط للربط السحابي)");
+            document.getElementById('shareReadyLinkBox').classList.add('hidden');
+            alert("تم فصل الاتصال السحابي والعودة إلى الحفظ المحلي.");
+        }
+
+        function copyShareUrl() {
+            const input = document.getElementById('generatedShareUrl');
+            input.select();
+            navigator.clipboard.writeText(input.value);
+            alert("✅ تم نسخ رابط الدخول السحابي الجاهز! أرسله الآن للمقاولين والمهندسين.");
+        }
+
+        // =========================================================================
+        // 6. CALCULATIONS & RENDERING
+        // =========================================================================
+        function calcProjectProgress(proj) {
+            if (!proj.checklist || proj.checklist.length === 0) return 0;
+            const doneCount = proj.checklist.filter(i => i.done).length;
+            return Math.round((doneCount / proj.checklist.length) * 100);
+        }
+
+        function calcProjectFinancials(proj) {
+            const estimated = Number(proj.estimatedBudget) || 0;
+            const contract = Number(proj.contractValue) || 0;
+            const variations = Number(proj.variationOrders) || 0;
+            const totalActualCommitment = contract + variations;
+            const paid = (proj.payments || [])
+                .filter(p => p.status === 'تم الصرف')
+                .reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+            const underReview = (proj.payments || [])
+                .filter(p => p.status !== 'تم الصرف')
+                .reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+            const retentionPct = Number(proj.retentionPercent) || 0;
+            const retentionAmount = Math.round((totalActualCommitment * retentionPct) / 100);
+            const remaining = Math.max(0, totalActualCommitment - paid);
+            return { estimated, contract, variations, totalActualCommitment, paid, underReview, retentionPct, retentionAmount, remaining };
+        }
+
+        function formatMoney(num) {
+            return Number(num || 0).toLocaleString('ar-EG') + ' ج.م';
+        }
+
+        function renderAll() {
+            renderKPIs();
+            renderProjectsList();
+            renderSelectedProjectDetail();
+        }
+
+        function renderKPIs() {
+            const total = state.projects.length;
+            const active = state.projects.filter(p => p.status === 'قيد التنفيذ بالموقع' || p.status === 'استلام ابتدائي').length;
+            const completed = state.projects.filter(p => p.status === 'مكتمل ومسلم').length;
+
+            let sumProgress = 0, sumEstimated = 0, sumActualContract = 0, sumPaid = 0, totalDrawings = 0, approvedDrawings = 0;
+
+            state.projects.forEach(p => {
+                sumProgress += calcProjectProgress(p);
+                const fin = calcProjectFinancials(p);
+                sumEstimated += fin.estimated;
+                sumActualContract += fin.totalActualCommitment;
+                sumPaid += fin.paid;
+                const drws = p.drawings || [];
+                totalDrawings += drws.length;
+                approvedDrawings += drws.filter(d => (d.status || '').includes('معتمد')).length;
+            });
+
+            const avgProgress = total > 0 ? Math.round(sumProgress / total) : 0;
+            const totalRemaining = Math.max(0, sumActualContract - sumPaid);
+
+            document.getElementById('kpiTotalProjects').textContent = total;
+            document.getElementById('kpiActiveCount').textContent = `${active} جاري التنفيذ`;
+            document.getElementById('kpiAvgProgress').textContent = `${avgProgress}%`;
+            document.getElementById('kpiCompletedCount').textContent = `${completed} مكتمل`;
+            document.getElementById('kpiProgressBar').style.width = `${avgProgress}%`;
+            document.getElementById('kpiTotalBudget').textContent = formatMoney(sumActualContract);
+            document.getElementById('kpiEstimatedBudget').textContent = `الميزانية التقديرية: ${formatMoney(sumEstimated)}`;
+            document.getElementById('kpiTotalPaid').textContent = formatMoney(sumPaid);
+            document.getElementById('kpiTotalRemaining').textContent = `المتبقي للصرف: ${formatMoney(totalRemaining)}`;
+            document.getElementById('kpiTotalDrawings').textContent = totalDrawings;
+            document.getElementById('kpiApprovedDrawings').textContent = `${approvedDrawings} معتمد`;
+        }
+
+        function getFilteredProjects() {
+            const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+            const typeFilter = document.getElementById('filterType')?.value || 'ALL';
+            const subTradeFilter = document.getElementById('filterSubTrade')?.value || 'ALL';
+            const statusFilter = document.getElementById('filterStatus')?.value || 'ALL';
+
+            return state.projects.filter(p => {
+                const subScopesStr = (p.subScopes || []).join(' ');
+                const matchSearch = !q || [p.name, p.code, p.contractor, p.engineer, p.location, subScopesStr].some(v => (v || '').toLowerCase().includes(q));
+                const matchType = typeFilter === 'ALL' || p.type === typeFilter;
+                const matchSubTrade = subTradeFilter === 'ALL' || (p.subScopes && p.subScopes.includes(subTradeFilter));
+                const matchStatus = statusFilter === 'ALL' || p.status === statusFilter;
+                return matchSearch && matchType && matchSubTrade && matchStatus;
+            });
+        }
+
+        function getStatusBadge(status) {
+            if (status === 'مكتمل ومسلم') return 'bg-emerald-100 text-emerald-800 border-emerald-300';
+            if (status === 'قيد التنفيذ بالموقع') return 'bg-blue-100 text-blue-900 border-blue-300';
+            if (status === 'استلام ابتدائي') return 'bg-amber-100 text-amber-900 border-amber-300';
+            if (status === 'متوقف / مؤجل') return 'bg-rose-100 text-rose-900 border-rose-300';
+            return 'bg-slate-100 text-slate-800 border-slate-300';
+        }
+
+        function renderProjectsList() {
+            const container = document.getElementById('projectsListContainer');
+            const filtered = getFilteredProjects();
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-8 text-center border-2 border-dashed border-slate-300">
+                        <div class="text-4xl mb-2">📋</div>
+                        <h4 class="text-sm font-bold text-slate-800">لا توجد مشاريع مطابقة حالياً</h4>
+                        <p class="text-xs text-slate-500 mt-1">اضغط على زر "➕ مشروع جديد" في الأعلى لإضافة مشروع</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(p => {
+                const isSelected = p.id === state.selectedProjectId;
+                const prog = calcProjectProgress(p);
+                const fin = calcProjectFinancials(p);
+                const subScopes = p.subScopes || [];
+
+                return `
+                    <div onclick="selectProject('${p.id}')" 
+                        class="cursor-pointer rounded-2xl p-4 transition duration-150 border-2 ${isSelected ? 'bg-gradient-to-br from-blue-900 to-sky-900 text-white border-blue-500 shadow-md' : 'bg-white hover:bg-blue-50/40 border-slate-200'}">
+                        
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <span class="inline-block text-[11px] font-black px-2.5 py-0.5 rounded-lg ${isSelected ? 'bg-sky-400 text-blue-950' : 'bg-blue-50 text-blue-900 border border-blue-200'}">${p.code}</span>
+                                <h3 class="font-black text-sm mt-1.5 leading-snug">${p.name}</h3>
+                            </div>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${getStatusBadge(p.status)}">${p.status}</span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1 mt-2">
+                            ${subScopes.slice(0, 3).map(s => `
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isSelected ? 'bg-white/15 text-sky-100' : 'bg-slate-100 text-slate-700'}">${s}</span>
+                            `).join('')}
+                            ${subScopes.length > 3 ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}">+${subScopes.length - 3}</span>` : ''}
+                        </div>
+
+                        <div class="mt-3 text-xs ${isSelected ? 'text-sky-100' : 'text-slate-600'} space-y-1">
+                            <div>👷 المقاول: <strong class="${isSelected ? 'text-white' : 'text-slate-900'}">${p.contractor || '-'}</strong></div>
+                            <div class="flex items-center justify-between">
+                                <span>📐 اللوحات: ${(p.drawings || []).length}</span>
+                                <span>💰 العقد: ${formatMoney(fin.totalActualCommitment)}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="${isSelected ? 'text-sky-200' : 'text-slate-600'} font-bold">الإنجاز التنفيذي</span>
+                                <span class="font-black ${isSelected ? 'text-sky-300' : 'text-emerald-700'}">${prog}%</span>
+                            </div>
+                            <div class="w-full h-2 rounded-full overflow-hidden ${isSelected ? 'bg-blue-950' : 'bg-slate-100'}">
+                                <div class="h-full rounded-full ${prog === 100 ? 'bg-emerald-400' : 'bg-sky-400'}" style="width: ${prog}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectProject(id) {
+            state.selectedProjectId = id;
+            renderAll();
+        }
+
+        function setProjectTab(projId, tabName) {
+            const p = state.projects.find(x => x.id === projId);
+            if (p) {
+                p.activeTab = tabName;
+                renderSelectedProjectDetail();
+            }
+        }
+
+        function renderSelectedProjectDetail() {
+            const container = document.getElementById('projectDetailWorkspace');
+            const proj = state.projects.find(p => p.id === state.selectedProjectId);
+
+            if (!proj) {
+                container.innerHTML = `
+                    <div class="p-12 text-center flex flex-col items-center justify-center min-h-[550px]">
+                        <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center text-3xl mb-3">🏗️</div>
+                        <h3 class="text-lg font-black text-blue-950">اختر مشروعاً من القائمة أو أنشئ مشروعاً جديداً</h3>
+                        <p class="text-xs text-slate-500 mt-1.5 max-w-md">يمكنك متابعة مراحل الاستلام (Checklist)، رفع اللوحات الهندسية DWG/PDF سحابياً، وإدارة المستخلصات المالية لصيدليات العزبي.</p>
+                        <button type="button" onclick="openNewProjectModal()" class="mt-5 bg-blue-700 hover:bg-blue-600 text-white font-black px-6 py-2.5 rounded-xl text-xs shadow-md">
+                            ➕ إنشاء مشروع جديد الآن
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const prog = calcProjectProgress(proj);
+            const fin = calcProjectFinancials(proj);
+            const activeTab = proj.activeTab || 'checklist';
+            const subScopes = proj.subScopes || [];
+
+            container.innerHTML = `
+                <!-- Project Header Banner -->
+                <div class="elezaby-header text-white p-5 md:p-6 border-b border-blue-900">
+                    <div class="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="bg-white text-blue-950 text-xs font-black px-3 py-1 rounded-lg">${proj.code}</span>
+                                <span class="bg-blue-950/60 text-sky-200 text-xs font-bold px-2.5 py-1 rounded-lg border border-white/20">${proj.type}</span>
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-full border ${getStatusBadge(proj.status)}">${proj.status}</span>
+                            </div>
+                            <h2 class="text-lg md:text-2xl font-black mt-2.5 leading-snug">${proj.name}</h2>
+                            <p class="text-xs text-sky-100 mt-1">${proj.notes || 'لا توجد ملاحظات إضافية مسجلة'}</p>
+                        </div>
+
+                        <div class="flex items-center gap-2 no-print">
+                            <button type="button" onclick="openEditProjectModal('${proj.id}')" class="bg-white/15 hover:bg-white/25 text-white border border-white/20 px-3 py-1.5 rounded-xl text-xs font-bold">
+                                ✏️ تعديل
+                            </button>
+                            <button type="button" onclick="duplicateProject('${proj.id}')" class="bg-white/15 hover:bg-white/25 text-sky-200 border border-white/20 px-3 py-1.5 rounded-xl text-xs font-bold">
+                                📑 تكرار
+                            </button>
+                            <button type="button" onclick="deleteProject('${proj.id}')" class="bg-red-600/80 hover:bg-red-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold">
+                                🗑️ حذف
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-3.5 pt-3 border-t border-white/15 flex flex-wrap items-center gap-1.5">
+                        <span class="text-xs font-bold text-sky-200 ml-1">البنود المسندة:</span>
+                        ${subScopes.map(s => `<span class="bg-white/20 text-white text-[11px] font-bold px-2 py-0.5 rounded-md border border-white/20">${s}</span>`).join('')}
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-3 border-t border-white/15 text-xs">
+                        <div>
+                            <span class="text-sky-200 block font-semibold">شركة المقاولات:</span>
+                            <strong class="text-white text-sm">${proj.contractor || '-'}</strong>
+                        </div>
+                        <div>
+                            <span class="text-sky-200 block font-semibold">المهندس / الاستشاري:</span>
+                            <strong class="text-white text-sm">${proj.engineer || '-'} / ${proj.consultant || '-'}</strong>
+                        </div>
+                        <div>
+                            <span class="text-sky-200 block font-semibold">الموقع والمساحة:</span>
+                            <strong class="text-white text-sm">${proj.location || '-'}</strong>
+                        </div>
+                        <div>
+                            <span class="text-sky-200 block font-semibold">الجدول الزمني:</span>
+                            <strong class="text-sky-300 text-sm">${proj.startDate || '-'} ⬅️ ${proj.endDate || '-'}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <div class="bg-slate-100 border-b border-slate-200 px-5 flex flex-wrap items-center justify-between gap-2 no-print">
+                    <div class="flex items-center gap-1 pt-2 overflow-x-auto">
+                        <button type="button" onclick="setProjectTab('${proj.id}', 'checklist')"
+                            class="px-3.5 py-2.5 rounded-t-xl text-xs md:text-sm font-black transition whitespace-nowrap ${activeTab === 'checklist' ? 'bg-white text-blue-900 border-t-2 border-t-blue-700 border-x border-slate-200' : 'text-slate-600 hover:text-blue-900'}">
+                            ✅ مراحل الاستلام (${(proj.checklist || []).filter(i => i.done).length}/${(proj.checklist || []).length})
+                        </button>
+                        <button type="button" onclick="setProjectTab('${proj.id}', 'drawings')"
+                            class="px-3.5 py-2.5 rounded-t-xl text-xs md:text-sm font-black transition whitespace-nowrap ${activeTab === 'drawings' ? 'bg-white text-blue-900 border-t-2 border-t-blue-700 border-x border-slate-200' : 'text-slate-600 hover:text-blue-900'}">
+                            📐 الرسومات الهندسية (${(proj.drawings || []).length})
+                        </button>
+                        <button type="button" onclick="setProjectTab('${proj.id}', 'costs')"
+                            class="px-3.5 py-2.5 rounded-t-xl text-xs md:text-sm font-black transition whitespace-nowrap ${activeTab === 'costs' ? 'bg-white text-blue-900 border-t-2 border-t-blue-700 border-x border-slate-200' : 'text-slate-600 hover:text-blue-900'}">
+                            💰 المستخلصات والتكاليف (${(proj.payments || []).length})
+                        </button>
+                    </div>
+                    <div class="text-[11px] text-slate-500 font-semibold py-1">
+                        آخر تحديث: <strong>${proj.updatedBy || 'النظام'}</strong>
+                    </div>
+                </div>
+
+                <!-- Active Tab Body -->
+                <div class="p-5 md:p-6">
+                    ${activeTab === 'checklist' ? renderChecklistTab(proj, prog) : ''}
+                    ${activeTab === 'drawings' ? renderDrawingsTab(proj) : ''}
+                    ${activeTab === 'costs' ? renderCostsTab(proj, fin) : ''}
+                </div>
+            `;
+        }
+
+        // --- TAB 1: Checklist ---
+        function renderChecklistTab(proj, prog) {
+            const items = proj.checklist || [];
+            return `
+                <div class="space-y-5">
+                    <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-200 flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex-1 min-w-[200px]">
+                            <div class="flex items-center justify-between text-xs font-bold mb-1.5">
+                                <span class="text-blue-950 font-black">نسبة إنجاز بنود استلام الأعمال:</span>
+                                <span class="text-emerald-700 text-sm font-black">${prog}% مكتمل</span>
+                            </div>
+                            <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-emerald-500 transition-all duration-300" style="width: ${prog}%"></div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="loadDefaultChecklist('${proj.id}')" class="bg-white hover:bg-slate-50 text-blue-900 border border-blue-300 px-3 py-2 rounded-xl text-xs font-bold no-print">
+                            🔄 إدراج بنود الاستلام القياسية
+                        </button>
+                    </div>
+
+                    <form onsubmit="addChecklistItem(event, '${proj.id}')" class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 grid grid-cols-1 md:grid-cols-12 gap-2.5 items-end no-print">
+                        <div class="md:col-span-3">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">المرحلة الإنشائية</label>
+                            <select id="newChkPhase" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-bold">
+                                <option value="1. المعاينة والرسومات">1. المعاينة والرسومات</option>
+                                <option value="2. الأعمال الاعتيادية">2. الأعمال الاعتيادية</option>
+                                <option value="3. تأسيس الكهروميكانيك (MEP)">3. تأسيس الكهروميكانيك (MEP)</option>
+                                <option value="4. التشطيبات الداخلية والتجاليد">4. التشطيبات الداخلية والتجاليد</option>
+                                <option value="5. الواجهات والاستلام والتشغيل">5. الواجهات والاستلام والتشغيل</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-5">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">بيان البند أو خطوة الاستلام *</label>
+                            <input id="newChkTitle" type="text" required placeholder="مثال: استلام تجاليد الحوائط الخشبية..."
+                                class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">المسؤول</label>
+                            <input id="newChkAssignee" type="text" placeholder="المقاول / المهندس"
+                                class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-xs" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <button type="submit" class="w-full bg-blue-700 hover:bg-blue-600 text-white font-black py-2 px-3 rounded-lg text-xs">
+                                ➕ إضافة
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="space-y-2">
+                        ${items.length === 0 ? `
+                            <div class="text-center py-10 text-xs text-slate-500 border-2 border-dashed border-slate-200 rounded-xl">
+                                لا توجد خطوات استلام مسجلة لهذا المشروع بعد.
+                            </div>
+                        ` : items.map((item) => `
+                            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 p-3.5 rounded-xl border transition ${item.done ? 'bg-emerald-50/60 border-emerald-200' : 'bg-white border-slate-200 hover:border-blue-300'}">
+                                <div class="flex items-start gap-3 flex-1">
+                                    <input type="checkbox" ${item.done ? 'checked' : ''} 
+                                        onchange="toggleChecklistItem('${proj.id}', '${item.id}')"
+                                        class="mt-1 w-4 h-4 accent-emerald-600 cursor-pointer" />
+                                    <div class="flex-1">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="text-[10px] font-black px-2 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-200">${item.phase}</span>
+                                            ${item.assignee ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">👤 ${item.assignee}</span>` : ''}
+                                        </div>
+                                        <p class="text-xs md:text-sm font-bold mt-1.5 ${item.done ? 'line-through text-slate-400' : 'text-slate-900'}">${item.title}</p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="deleteChecklistItem('${proj.id}', '${item.id}')" class="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 no-print">حذف</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- TAB 2: Engineering Drawings (Supabase Storage Enabled) ---
+        function renderDrawingsTab(proj) {
+            const drawings = proj.drawings || [];
+            return `
+                <div class="space-y-5">
+                    <form onsubmit="addDrawingItem(event, '${proj.id}')" class="bg-blue-50/50 border border-blue-200 rounded-xl p-4 space-y-3 no-print">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h4 class="text-xs font-black text-blue-950">📐 رفع مخطط هندسي جديد (DWG / PDF / RVT / BOQ / صورة 3D)</h4>
+                            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full ${isCloudLive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                                ${isCloudLive ? '☁️ الرفع السحابي المباشر مفعّل' : '⚠️ اربط Supabase لرفع الملفات سحابياً'}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                            <div class="md:col-span-4">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">عنوان المخطط / اللوحة *</label>
+                                <input id="drwTitle" type="text" required placeholder="مثال: مخطط توزيع الإضاءة والقوى الكهربائية"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-bold" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">كود اللوحة</label>
+                                <input id="drwCode" type="text" placeholder="ARC-01"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-black text-blue-900" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">التخصص</label>
+                                <select id="drwDiscipline" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold">
+                                    <option value="معماري وديكور">معماري وديكور</option>
+                                    <option value="كهرباء وتيار خفيف">كهرباء وتيار خفيف</option>
+                                    <option value="ميكانيكا وتكييف">ميكانيكا وتكييف</option>
+                                    <option value="سباكة وصحي">سباكة وصحي</option>
+                                    <option value="واجهات وكلادينج">واجهات وكلادينج</option>
+                                    <option value="مقايسة كميات (BOQ)">مقايسة كميات (BOQ)</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">الصيغة</label>
+                                <select id="drwFormat" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold">
+                                    <option value="DWG">AutoCAD (.DWG)</option>
+                                    <option value="PDF">مخطط (.PDF)</option>
+                                    <option value="RVT">Revit (.RVT)</option>
+                                    <option value="XLSX">مقايسة (.XLSX)</option>
+                                    <option value="IMG">منظور 3D (.JPG/.PNG)</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">الإصدار</label>
+                                <input id="drwRev" type="text" value="Rev 01"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                            <div class="md:col-span-5">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">اختر ملف اللوحة من الهاتف أو الكمبيوتر:</label>
+                                <input id="drwFileInput" type="file" accept=".dwg,.dxf,.pdf,.rvt,.xlsx,.xls,.jpg,.jpeg,.png,.zip"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs" />
+                            </div>
+                            <div class="md:col-span-4">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">أو رابط خارجي (Google Drive / OneDrive):</label>
+                                <input id="drwExternalLink" type="url" placeholder="https://..."
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs" />
+                            </div>
+                            <div class="md:col-span-3">
+                                <button id="uploadDrwBtn" type="submit" class="w-full bg-blue-700 hover:bg-blue-600 text-white font-black py-2 px-4 rounded-lg text-xs shadow-sm">
+                                    ⬆️ رفع وتسجيل اللوحة
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-blue-900 text-white font-extrabold">
+                                <tr>
+                                    <th class="p-3">كود اللوحة</th>
+                                    <th class="p-3">عنوان المخطط</th>
+                                    <th class="p-3">التخصص</th>
+                                    <th class="p-3">الصيغة والإصدار</th>
+                                    <th class="p-3">الرافع والتاريخ</th>
+                                    <th class="p-3">حالة الاعتماد</th>
+                                    <th class="p-3 no-print">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                ${drawings.length === 0 ? `
+                                    <tr>
+                                        <td colspan="7" class="p-8 text-center text-slate-500">لا توجد لوحات هندسية مرفوعة لهذا المشروع بعد.</td>
+                                    </tr>
+                                ` : drawings.map(d => `
+                                    <tr class="hover:bg-blue-50/30">
+                                        <td class="p-3 font-black text-blue-900">${d.code || '-'}</td>
+                                        <td class="p-3 font-bold text-slate-900">${d.title}</td>
+                                        <td class="p-3"><span class="bg-slate-100 px-2 py-0.5 rounded font-bold">${d.discipline}</span></td>
+                                        <td class="p-3">
+                                            <span class="bg-sky-100 text-sky-900 font-black px-2 py-0.5 rounded">${d.format}</span>
+                                            <span class="text-slate-500 mr-1">${d.revision} (${d.size || ''})</span>
+                                        </td>
+                                        <td class="p-3 text-slate-600">${d.uploadedBy}<br><span class="text-[10px] text-slate-400">${d.date}</span></td>
+                                        <td class="p-3">
+                                            <select onchange="updateDrawingStatus('${proj.id}', '${d.id}', this.value)"
+                                                class="border rounded-lg px-2 py-1 text-xs font-bold ${d.status.includes('معتمد') ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : d.status.includes('مرفوض') ? 'bg-red-50 text-red-800 border-red-300' : 'bg-amber-50 text-amber-800 border-amber-300'}">
+                                                <option value="معتمد للتنفيذ (Approved)" ${d.status.includes('معتمد') ? 'selected' : ''}>معتمد للتنفيذ (Approved)</option>
+                                                <option value="قيد المراجعة (Under Review)" ${d.status.includes('قيد المراجعة') ? 'selected' : ''}>قيد المراجعة (Under Review)</option>
+                                                <option value="مرفوض ومطلوب تعديل (Revise)" ${d.status.includes('مرفوض') ? 'selected' : ''}>مرفوض ومطلوب تعديل (Revise)</option>
+                                                <option value="مخطط نهائي منفذ (As-Built)" ${d.status.includes('As-Built') ? 'selected' : ''}>مخطط نهائي منفذ (As-Built)</option>
+                                            </select>
+                                        </td>
+                                        <td class="p-3 no-print">
+                                            <div class="flex items-center gap-2">
+                                                ${d.fileUrl ? `<a href="${d.fileUrl}" target="_blank" rel="noopener" class="bg-blue-700 hover:bg-blue-600 text-white px-2.5 py-1 rounded-md font-bold">⬇️ فتح</a>` : `<span class="text-slate-400 text-[11px]">بيانات</span>`}
+                                                <button type="button" onclick="deleteDrawing('${proj.id}', '${d.id}')" class="text-red-600 hover:text-red-800 font-bold">حذف</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- TAB 3: Costs & IPCs ---
+        function renderCostsTab(proj, fin) {
+            const payments = proj.payments || [];
+            const isOverBudget = fin.totalActualCommitment > fin.estimated && fin.estimated > 0;
+
+            return `
+                <div class="space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                            <span class="text-[11px] text-slate-500 font-bold">الميزانية التقديرية (BOQ)</span>
+                            <div class="text-lg font-black text-slate-900 mt-1">${formatMoney(fin.estimated)}</div>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-xl border ${isOverBudget ? 'border-red-300 bg-red-50/50' : 'border-slate-200'}">
+                            <span class="text-[11px] text-slate-500 font-bold">إجمالي العقد + أوامر التغيير</span>
+                            <div class="text-lg font-black ${isOverBudget ? 'text-red-700' : 'text-blue-900'} mt-1">${formatMoney(fin.totalActualCommitment)}</div>
+                            <span class="text-[10px] text-slate-500">العقد: ${formatMoney(fin.contract)} | إضافات: ${formatMoney(fin.variations)}</span>
+                        </div>
+                        <div class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200">
+                            <span class="text-[11px] text-emerald-900 font-bold">المنصرف الفعلي بالمستخلصات</span>
+                            <div class="text-lg font-black text-emerald-700 mt-1">${formatMoney(fin.paid)}</div>
+                            <span class="text-[10px] text-emerald-800">قيد المراجعة: ${formatMoney(fin.underReview)}</span>
+                        </div>
+                        <div class="bg-sky-50/70 p-3.5 rounded-xl border border-sky-200">
+                            <span class="text-[11px] text-blue-950 font-bold">المتبقي للصرف وتأمين الأعمال</span>
+                            <div class="text-lg font-black text-blue-800 mt-1">${formatMoney(fin.remaining)}</div>
+                            <span class="text-[10px] text-blue-900">محجوز ضمان (${fin.retentionPct}%): ${formatMoney(fin.retentionAmount)}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50/50 p-3.5 rounded-xl border border-blue-200 flex flex-wrap items-center justify-between gap-3 text-xs no-print">
+                        <div class="flex flex-wrap items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <label class="font-bold text-slate-700">قيمة أوامر التغيير (Variations):</label>
+                                <input type="number" step="any" value="${proj.variationOrders || 0}"
+                                    onchange="updateFinancialParam('${proj.id}', 'variationOrders', this.value)"
+                                    class="bg-white border border-slate-300 rounded-lg px-2.5 py-1 w-32 font-bold" />
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="font-bold text-slate-700">نسبة تأمين الأعمال (%):</label>
+                                <input type="number" step="any" value="${proj.retentionPercent || 5}"
+                                    onchange="updateFinancialParam('${proj.id}', 'retentionPercent', this.value)"
+                                    class="bg-white border border-slate-300 rounded-lg px-2 py-1 w-20 font-bold" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <form onsubmit="addPaymentItem(event, '${proj.id}')" class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 no-print">
+                        <h4 class="text-xs font-black text-blue-950">🧾 تسجيل مستخلص أعمال جاري / دفعة مقاول</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                            <div class="md:col-span-4">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">بيان المستخلص أو الدفعة *</label>
+                                <input id="payTitle" type="text" required placeholder="مثال: مستخلص جاري رقم (3) - الواجهات"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-semibold" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">رقم المستخلص</label>
+                                <input id="payInvoiceNo" type="text" placeholder="IPC-003"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">المبلغ (ج.م) *</label>
+                                <input id="payAmount" type="number" step="any" required placeholder="0"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-black text-blue-900" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-700 mb-1">حالة الصرف</label>
+                                <select id="payStatus" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-bold">
+                                    <option value="تم الصرف">تم الصرف</option>
+                                    <option value="قيد المراجعة المالية">قيد المراجعة المالية</option>
+                                    <option value="معتمد بانتظار التحويل">معتمد بانتظار التحويل</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <button type="submit" class="w-full bg-blue-700 hover:bg-blue-600 text-white font-black py-2 px-3 rounded-lg text-xs">
+                                    ➕ إضافة
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-blue-900 text-white font-extrabold">
+                                <tr>
+                                    <th class="p-3">رقم المستخلص</th>
+                                    <th class="p-3">بيان الأعمال / الدفعة</th>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">القيمة المالية</th>
+                                    <th class="p-3">حالة الصرف</th>
+                                    <th class="p-3 no-print">حذف</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                ${payments.length === 0 ? `
+                                    <tr>
+                                        <td colspan="6" class="p-8 text-center text-slate-500">لا توجد مستخلصات مسجلة لهذا المشروع بعد.</td>
+                                    </tr>
+                                ` : payments.map(pay => `
+                                    <tr class="hover:bg-blue-50/30">
+                                        <td class="p-3 font-black text-blue-900">${pay.invoiceNo || '-'}</td>
+                                        <td class="p-3 font-bold text-slate-900">${pay.title}</td>
+                                        <td class="p-3 text-slate-600">${pay.date || '-'}</td>
+                                        <td class="p-3 font-black text-blue-800">${formatMoney(pay.amount)}</td>
+                                        <td class="p-3">
+                                            <select onchange="updatePaymentStatus('${proj.id}', '${pay.id}', this.value)"
+                                                class="border rounded-lg px-2 py-1 text-xs font-bold ${pay.status === 'تم الصرف' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-amber-50 text-amber-800 border-amber-300'}">
+                                                <option value="تم الصرف" ${pay.status === 'تم الصرف' ? 'selected' : ''}>تم الصرف</option>
+                                                <option value="قيد المراجعة المالية" ${pay.status === 'قيد المراجعة المالية' ? 'selected' : ''}>قيد المراجعة المالية</option>
+                                                <option value="معتمد بانتظار التحويل" ${pay.status === 'معتمد بانتظار التحويل' ? 'selected' : ''}>معتمد بانتظار التحويل</option>
+                                            </select>
+                                        </td>
+                                        <td class="p-3 no-print">
+                                            <button type="button" onclick="deletePayment('${proj.id}', '${pay.id}')" class="text-red-600 hover:text-red-800 font-bold">حذف</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // 7. CRUD ACTIONS & SUPABASE STORAGE UPLOAD
+        // =========================================================================
+        function toggleChecklistItem(projId, itemId) {
+            const proj = state.projects.find(p => p.id === projId);
+            if (!proj) return;
+            const item = (proj.checklist || []).find(i => i.id === itemId);
+            if (item) {
+                item.done = !item.done;
+                proj.updatedBy = getCurrentActor();
+                if (calcProjectProgress(proj) === 100) {
+                    proj.status = 'مكتمل ومسلم';
+                }
+                persistState(`تحديث بند استلام في مشروع ${proj.code}`);
+                renderAll();
+            }
+        }
+
+        function addChecklistItem(e, projId) {
+            e.preventDefault();
+            const proj = state.projects.find(p => p.id === projId);
+            if (!proj) return;
+            const phase = document.getElementById('newChkPhase').value;
+            const title = document.getElementById('newChkTitle').value.trim();
+            const assignee = document.getElementById('newChkAssignee').value.trim();
+            if (!title) return;
+
+            proj.checklist = proj.checklist || [];
+            proj.checklist.push({ id: 'CHK-' + Date.now(), phase, title, assignee, done: false });
+            proj.updatedBy = getCurrentActor();
+            persistState(`إضافة بند استلام جديد في مشروع ${proj.code}`);
+            renderAll();
+        }
+
+        function deleteChecklistItem(projId, itemId) {
+            const proj = state.projects.find(p => p.id === projId);
+            if (!proj) return;
+            proj.checklist = (proj.checklist || []).filter(i => i.id !== itemId);
+            proj.updatedBy = getCurrentActor();
+            persistState(`حذف بند استلام في مشروع ${proj.code}`);
+            renderAll();
+        }
+
+        function loadDefaultChecklist(projId) {
+            const proj = state.projects.find(p => p.id === projId);
+            if (!proj) return;
+            const copy = JSON.parse(JSON.stringify(DEFAULT_CHECKLIST_TEMPLATE)).map(i => ({ ...i, id: 'CHK-' + Math.random().toString(36).slice(2, 8), done: false }));
+            proj.checklist = [...(proj.checklist || []), ...copy];
+            proj.updatedBy = getCurrentActor();
+            persistState(`إدراج البنود القياسية في مشروع ${proj.code}`);
+            renderAll();
+        }
+
+        async function addDrawingItem(e, projId) {
+            e.preventDefault();
+            const proj = state.projects.find(p => p.id === projId);
+            if (!proj) return;
+
+            const title = document.getElementById('drwTitle').value.trim();
+            const code = document.getElementById('drwCode').value.trim() || 'DRW';
+            const discipline = document.getElementById('drwDiscipline').value;
+            const format = document.getElementById('drwFormat').value;
+            const revision = document.getElementById('drwRev').value.trim() || 'Rev 01';
+            const externalLink = document.getElementById('drwExternalLink').value.trim();
+            const fileInput = document.getElementById('drwFileInput');
+            const file = fileInput.files[0];
+
+            let fileUrl = externalLink;
+            let sizeStr = '-';
+
+            if (file) {
+                sizeStr = file.size > 1024 * 1024
+                    ? (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+                    : Math.max(1, Math.round(file.size / 1024)) + ' KB';
+
+                if (isCloudLive && supabaseClient) {
+                    const btn = document.getElementById('uploadDrwBtn');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.textContent = '⏳ جاري الرفع للسحابة...';
+                    }
+                    try {
+                        const cleanProjCode = (proj.code || 'BRANCH').replace(/[^a-zA-Z0-9_-]/g, '_');
+                        const ext = file.name.split('.').pop();
+                        const storagePath = `${cleanProjCode}/${Date.now()}_${code.replace(/[^a-zA-Z0-9_-]/g, '_')}.${ext}`;
+
+                        const { error: upErr } = await supabaseClient.storage
+                            .from(STORAGE_BUCKET_NAME)
+                            .upload(storagePath, file, { upsert: true });
+
+                        if (upErr) {
+                            alert("تعذر رفع الملف إلى Supabase Storage:\n" + upErr.message + "\nتأكد من إنشاء حاوية engineering-drawings وجعلها Public.");
+                        } else {
+                            const { data: pubData } = supabaseClient.storage
+                                .from(STORAGE_BUCKET_NAME)
+                                .getPublicUrl(storagePath);
+                            if (pubData && pubData.publicUrl) {
+                                fileUrl = pubData.publicUrl;
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Storage upload error:", err);
+                    } finally {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.textContent = '⬆️ رفع وتسجيل اللوحة';
+                        }
+                    }
+                } else {
+                    alert("تنبيه: أنت حالياً في الوضع المحلي. لتخزين ملفات DWG/PDF بحيث يراها ويحمّلها الجميع، اربط التطبيق بـ Supabase من زر (☁️ السحابة والمشاركة) في الأعلى.");
+                }
+            }
+
+            proj.drawings = proj.drawings || [];
+            proj.drawings.unshift({
+                id: 'DRW-' + Date.now(),
+                title,
+                code,
+                discipline,
+                format,
+                revision,
+                status: 'قيد المراجعة (Under Review)',
+                uploadedBy: getCurrentActor(),
+                date: new Date().toISOString().slice(0, 10),
+                size: sizeStr,
+                fileUrl
+            });
+
+            proj.updatedBy = getCurrentActor();
+            await persistState(`رفع مخطط هندسي (${code}) في مشروع ${proj.code}`);
+            renderAll();
+        }
+
+        function updateDrawingStatus(projId, drwId, newStatus) {
+            const proj = state.projects.find(p => p.id === projId);
+            if (!proj) return;
+            const drw = (proj.drawings || []).find(d => d.id === drwId);
+            if (drw) {
+                drw.status = newStatus;
+                proj.updatedBy = getCurrentActor();
+                persistState(`تحديث حالة اعتماد لوحة ${drw.code} إلى ${newStatus}`);
+                renderKPIs();
+            }
+        }
+
+        function deleteDrawing(projId, drwId) {
+            const proj = state.projects.find(p => p.id === projId);
+            if (!proj) return;
+            proj.drawings = (proj.drawings || []).filter(d => d.id !== drwId);
+            proj.updatedBy = getCurrentActor();
+            persistState(`حذف لوحة هندسية في مشروع ${proj.code}`);
+            renderAll();
+        }
+
+        function updateFinancialParam(projId, field, value) {
+            const proj = state.projects.find(p => p.id === projId);
+            if (!proj) return;
+            proj[field] = Number(value) || 0;
+            proj.updatedBy = getCurrentActor();
+            persistState(`تعديل البيانات المالية لمشروع ${proj.code}`);
+            renderAll();
+        }
+
+        function addPaymentItem(e, projId) {
+            e.preventDefault();
+            const proj = state.projects.find(p => p.id === projId);
+            if (!proj) return;
+            const title = document.getElementById('payTitle').value.trim();
+            const invoiceNo = document.getElementById('payInvoiceNo').value.trim() || 'IPC';
+            const amount = Number(document.getElementById('payAmount').value) || 0;
+            const status = document.getElementById('payStatus').value;
+
+            proj.payments = proj.payments || [];
+            proj.payments.push({ id: 'PAY-' + Date.now(), title, invoiceNo, amount, status, date: new Date().toISOString().slice(0, 10) });
+            proj.updatedBy = getCurrentActor();
+            persistState(`إضافة مستخلص (${invoiceNo}) بقيمة ${amount} في مشروع ${proj.code}`);
+            renderAll();
+        }
+
+        function updatePaymentStatus(projId, payId, newStatus) {
+            const proj = state.projects.find(p => p.id === projId);
+            if (!proj) return;
+            const pay = (proj.payments || []).find(p => p.id === payId);
+            if (pay) {
+                pay.status = newStatus;
+                proj.updatedBy = getCurrentActor();
+                persistState(`تحديث حالة صرف مستخلص ${pay.invoiceNo} إلى ${newStatus}`);
+                renderAll();
+            }
+        }
+
+        function deletePayment(projId, payId) {
+            const proj = state.projects.find(p => p.id === projId);
+            if (!proj) return;
+            proj.payments = (proj.payments || []).filter(p => p.id !== payId);
+            proj.updatedBy = getCurrentActor();
+            persistState(`حذف مستخلص مالي في مشروع ${proj.code}`);
+            renderAll();
+        }
+
+        // --- Project Modal CRUD ---
+        function openNewProjectModal() {
+            document.getElementById('projectModalTitle').textContent = 'إنشاء مشروع هندسي جديد - صيدليات العزبي';
+            document.getElementById('editProjectId').value = '';
+            document.getElementById('projectForm').reset();
+            document.querySelectorAll('#subScopesContainer input[type="checkbox"]').forEach(cb => cb.checked = true);
+            document.getElementById('templateChecklistOption').classList.remove('hidden');
+
+            const modal = document.getElementById('projectModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function openEditProjectModal(projId) {
+            const proj = state.projects.find(p => p.id === projId);
+            if (!proj) return;
+            document.getElementById('projectModalTitle').textContent = 'تعديل بيانات المشروع / الفرع';
+            document.getElementById('editProjectId').value = proj.id;
+            document.getElementById('projName').value = proj.name || '';
+            document.getElementById('projCode').value = proj.code || '';
+            document.getElementById('projType').value = proj.type || 'إنشاء وتجهيز فرع جديد (Fit-out متكامل)';
+            document.getElementById('projStatus').value = proj.status || 'قيد التنفيذ بالموقع';
+            document.getElementById('projLocation').value = proj.location || '';
+            document.getElementById('projContractor').value = proj.contractor || '';
+            document.getElementById('projEngineer').value = proj.engineer || '';
+            document.getElementById('projConsultant').value = proj.consultant || '';
+            document.getElementById('projEstimatedBudget').value = proj.estimatedBudget || 0;
+            document.getElementById('projContractValue').value = proj.contractValue || 0;
+            document.getElementById('projStartDate').value = proj.startDate || '';
+            document.getElementById('projEndDate').value = proj.endDate || '';
+            document.getElementById('projNotes').value = proj.notes || '';
+
+            const subScopes = proj.subScopes || [];
+            document.querySelectorAll('#subScopesContainer input[type="checkbox"]').forEach(cb => {
+                cb.checked = subScopes.includes(cb.value);
+            });
+
+            document.getElementById('templateChecklistOption').classList.add('hidden');
+            const modal = document.getElementById('projectModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeProjectModal() {
+            const modal = document.getElementById('projectModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveProjectForm(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editProjectId').value;
+            const selectedScopes = [];
+            document.querySelectorAll('#subScopesContainer input[type="checkbox"]:checked').forEach(cb => {
+                selectedScopes.push(cb.value);
+            });
+
+            const formData = {
+                name: document.getElementById('projName').value.trim(),
+                code: document.getElementById('projCode').value.trim(),
+                type: document.getElementById('projType').value,
+                subScopes: selectedScopes,
+                status: document.getElementById('projStatus').value,
+                location: document.getElementById('projLocation').value.trim(),
+                contractor: document.getElementById('projContractor').value.trim(),
+                engineer: document.getElementById('projEngineer').value.trim(),
+                consultant: document.getElementById('projConsultant').value.trim(),
+                estimatedBudget: Number(document.getElementById('projEstimatedBudget').value) || 0,
+                contractValue: Number(document.getElementById('projContractValue').value) || 0,
+                startDate: document.getElementById('projStartDate').value,
+                endDate: document.getElementById('projEndDate').value,
+                notes: document.getElementById('projNotes').value.trim(),
+                updatedBy: getCurrentActor()
+            };
+
+            if (editId) {
+                const idx = state.projects.findIndex(p => p.id === editId);
+                if (idx > -1) {
+                    state.projects[idx] = { ...state.projects[idx], ...formData };
+                }
+                persistState(`تعديل بيانات مشروع ${formData.code}`);
+            } else {
+                const useDefaultChecklist = document.getElementById('loadDefaultChecklist').checked;
+                const newProj = {
+                    id: 'PRJ-' + Date.now(),
+                    ...formData,
+                    variationOrders: 0,
+                    retentionPercent: 5,
+                    activeTab: 'checklist',
+                    checklist: useDefaultChecklist
+                        ? JSON.parse(JSON.stringify(DEFAULT_CHECKLIST_TEMPLATE)).map(i => ({ ...i, id: 'CHK-' + Math.random().toString(36).slice(2, 8), done: false }))
+                        : [],
+                    drawings: [],
+                    payments: []
+                };
+                state.projects.unshift(newProj);
+                state.selectedProjectId = newProj.id;
+                persistState(`إنشاء مشروع جديد: ${formData.code} - ${formData.name}`);
+            }
+
+            closeProjectModal();
+            renderAll();
+        }
+
+        function duplicateProject(projId) {
+            const orig = state.projects.find(p => p.id === projId);
+            if (!orig) return;
+            const copy = JSON.parse(JSON.stringify(orig));
+            copy.id = 'PRJ-' + Date.now();
+            copy.name = orig.name + ' (نسخة جديدة)';
+            copy.code = orig.code + '-NEW';
+            copy.checklist = (copy.checklist || []).map(c => ({ ...c, id: 'CHK-' + Math.random().toString(36).slice(2, 8), done: false }));
+            copy.drawings = [];
+            copy.payments = [];
+            copy.updatedBy = getCurrentActor();
+            state.projects.unshift(copy);
+            state.selectedProjectId = copy.id;
+            persistState(`تكرار مشروع ${orig.code}`);
+            renderAll();
+        }
+
+        function deleteProject(projId) {
+            if (!confirm('هل تريد حذف هذا المشروع وكافة مستنداته ومستخلصاته؟')) return;
+            const target = state.projects.find(p => p.id === projId);
+            state.projects = state.projects.filter(p => p.id !== projId);
+            state.selectedProjectId = state.projects[0]?.id || null;
+            persistState(`حذف مشروع ${target?.code || projId}`);
+            renderAll();
+        }
+
+        function clearAllProjects() {
+            if (!confirm('هل أنت متأكد من تفريغ كافة المشاريع من اللوحة للبدء فارغاً؟')) return;
+            state.projects = [];
+            state.selectedProjectId = null;
+            persistState("تصفير كافة المشاريع في اللوحة");
+            renderAll();
+        }
+
+        // --- Export / Import ---
+        function exportBackupJSON() {
+            const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `elezaby_projects_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+        }
+
+        function importBackupJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (Array.isArray(data.projects)) {
+                        state.projects = data.projects;
+                        state.selectedProjectId = state.projects[0]?.id || null;
+                        persistState("استيراد نسخة احتياطية JSON");
+                        renderAll();
+                    }
+                } catch (err) {
+                    alert('ملف النسخة الاحتياطية غير صالح');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportCSV() {
+            const headers = ['كود الفرع', 'اسم المشروع', 'نوع المشروع', 'البنود الإنشائية', 'الحالة', 'المقاول المنفذ', 'المهندس المشرف', 'نسبة الإنجاز %', 'الميزانية التقديرية', 'إجمالي العقد والتعديلات', 'المنصرف بالمستخلصات', 'المتبقي للصرف', 'عدد اللوحات'];
+            const rows = state.projects.map(p => {
+                const prog = calcProjectProgress(p);
+                const fin = calcProjectFinancials(p);
+                return [
+                    p.code, p.name, p.type, (p.subScopes || []).join(' | '), p.status,
+                    p.contractor, p.engineer, prog + '%', fin.estimated,
+                    fin.totalActualCommitment, fin.paid, fin.remaining, (p.drawings || []).length
+                ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',');
+            });
+            const newline = String.fromCharCode(13, 10);
+            const csv = '\uFEFF' + [headers.join(','), ...rows].join(newline);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `elezaby_projects_report_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+        }
+    </script>
+</body>
+</html>
